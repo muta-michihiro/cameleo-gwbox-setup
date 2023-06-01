@@ -89,7 +89,7 @@ fi
 
 # vimrc
 if [ ! -f /root/.vimrc ]; then
-  cat << EOF | suto tee /root/.vimrc > /dev/null
+  cat << EOF | sudo tee /root/.vimrc > /dev/null
 set expandtab
 set softtabstop=2
 set shiftwidth=2
@@ -97,3 +97,26 @@ set autoindent
 EOF
 fi
  
+# helper
+cat << EOF2 > /usr/local/etc/cg-auth.sh
+#!/bin/bash
+
+while true; do
+  u=
+  p=
+  while [ "$u" = "" ]; do read -p "cognito user: " u; done
+  while [ "$p" = "" ]; do read -p "cognito password: " p; done
+  cognito -u "$u" -p "$p" > /dev/null
+  if [ $? -ne 0 ]; then
+    continue;
+  fi
+  cp -p ~/.aws/config ~/.aws/config.$(date --iso=sec) > /dev/null 2>&1
+  cat << EOF > ~/.aws/config
+[default]
+region = ap-northeast-1
+credential_process = cognito -u '${u}' -p '${p}'
+EOF
+  echo ok.
+  break
+done
+EOF2
